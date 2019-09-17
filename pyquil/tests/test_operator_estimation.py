@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 from pyquil.quilbase import Pragma
 from pyquil import Program, get_qc
-from pyquil.gates import *
+from pyquil.gates import CNOT, CZ, H, I, MEASURE, RESET, RX, RY, RZ, X, Y
 from pyquil.api import WavefunctionSimulator, QVMConnection
 from pyquil.operator_estimation import ExperimentSetting, TomographyExperiment, to_json, read_json, \
     group_experiments, ExperimentResult, measure_observables, SIC0, SIC1, SIC2, SIC3, \

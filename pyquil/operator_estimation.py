@@ -15,7 +15,7 @@ from networkx.algorithms.approximation.clique import clique_removal
 from functools import reduce
 from pyquil import Program
 from pyquil.api import QuantumComputer
-from pyquil.gates import *
+from pyquil.gates import MEASURE, RESET, RX, RY, RZ, X
 from pyquil.paulis import PauliTerm, sI, is_identity
 from math import pi
 
