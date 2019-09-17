@@ -25,19 +25,19 @@ class QuilAtom(object):
     Abstract class for atomic elements of Quil.
     """
 
-    def out(self):
+    def out(self) -> str:
         raise NotImplementedError()
 
-    def __str__(self):
+    def __str__(self) -> str:
         raise NotImplementedError()
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         raise NotImplementedError()
 
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         raise NotImplementedError()
 
 
@@ -70,7 +70,7 @@ class Qubit(QuilAtom):
 
 
 class QubitPlaceholder(QuilAtom):
-    def out(self):
+    def out(self) -> str:
         raise RuntimeError("Qubit {} has not been assigned an index".format(self))
 
     def __str__(self) -> str:
@@ -125,8 +125,11 @@ def unpack_qubit(qubit: QubitDesignator) -> Union[Qubit, QubitPlaceholder]:
         raise TypeError("qubit should be an int or Qubit instance")
 
 
-# Like the Tuple, the List must be length 2, where the first item is a string and the second an int.
-MemoryReferenceDesignator = Union['MemoryReference', Tuple[str, int], List, str]
+# Like the Tuple, the List must be length 2, where the first item is a string and the second an
+# int. However, specifying Union[str, int] as the generic type argument to List doesn't sufficiently
+# constrain the types, and mypy gets confused in unpack_classical_reg, below. Hence, just specify
+# List here and add a "# type: ignore" comment to silence mypy --strict.
+MemoryReferenceDesignator = Union['MemoryReference', Tuple[str, int], List, str]  # type: ignore
 
 
 def unpack_classical_reg(c: MemoryReferenceDesignator) -> 'MemoryReference':
@@ -184,7 +187,7 @@ class LabelPlaceholder(QuilAtom):
     def __init__(self, prefix: str = "L") -> None:
         self.prefix = prefix
 
-    def out(self):
+    def out(self) -> str:
         raise RuntimeError("Label has not been assigned a name")
 
     def __str__(self) -> str:
@@ -245,7 +248,7 @@ def format_parameter(element: ParameterDesignator) -> str:
     assert False, "Invalid parameter: %r" % element
 
 
-ExpressionValue = Union[int, float]
+ExpressionValue = Union[int, float, complex]
 ExpressionOrValue = Union['Expression', ExpressionValue]
 
 
@@ -365,7 +368,8 @@ class Function(Expression):
     """
     Supported functions in Quil are sin, cos, sqrt, exp, and cis
     """
-    def __init__(self, name: str, expression: ExpressionOrValue, fn: Callable) -> None:
+    def __init__(self, name: str, expression: ExpressionOrValue,
+                 fn: Callable[[ExpressionValue], ExpressionValue]) -> None:
         self.name = name
         self.expression = expression
         self.fn = fn
@@ -381,7 +385,7 @@ class Function(Expression):
                 and self.name == other.name
                 and self.expression == other.expression)
 
-    def __neq__(self, other: 'Function'):
+    def __neq__(self, other: 'Function') -> bool:
         return not self.__eq__(other)
 
 
@@ -402,7 +406,7 @@ def quil_exp(expression: ExpressionOrValue) -> Function:
 
 
 def quil_cis(expression: ExpressionOrValue) -> Function:
-    return Function('CIS', expression, lambda x: np.exp(1j * x))
+    return Function('CIS', expression, lambda x: np.exp(1j * x))  # type: ignore
 
 
 class BinaryExp(Expression):
@@ -411,7 +415,7 @@ class BinaryExp(Expression):
     associates: ClassVar[str]
 
     @staticmethod
-    def fn(a: ExpressionOrValue, b: ExpressionOrValue):
+    def fn(a: ExpressionOrValue, b: ExpressionOrValue) -> Union['BinaryExp', ExpressionValue]:
         raise NotImplementedError
 
     def __init__(self, op1: ExpressionOrValue, op2: ExpressionOrValue) -> None:
