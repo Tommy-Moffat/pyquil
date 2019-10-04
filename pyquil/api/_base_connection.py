@@ -15,9 +15,10 @@
 ##############################################################################
 from __future__ import print_function
 
-from enum import Enum
 import re
+import uuid
 import warnings
+from enum import Enum
 from json.decoder import JSONDecodeError
 from typing import Dict, Union, Sequence
 
@@ -26,7 +27,6 @@ import requests
 from requests.adapters import HTTPAdapter
 from six import integer_types
 from urllib3 import Retry
-import uuid
 
 from pyquil import Program
 from pyquil.api._config import PyquilConfig
