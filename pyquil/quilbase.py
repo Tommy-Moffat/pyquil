@@ -16,9 +16,11 @@
 """
 Contains the core pyQuil objects that correspond to Quil instructions.
 """
+import collections
 import numpy as np
 from six import integer_types, string_types
-from typing import Any, Callable, ClassVar, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import (Any, Callable, ClassVar, Container, Dict, Iterable, List, Optional, Set, Tuple,
+                    Union)
 from warnings import warn
 
 from pyquil.quilatom import (Expression, ExpressionOrValue, Label, LabelPlaceholder,
@@ -49,7 +51,7 @@ class AbstractInstruction(object):
         return hash(self.out())
 
 
-RESERVED_WORDS: List[str] = [
+RESERVED_WORDS: Container[str] = [
     'DEFGATE', 'DEFCIRCUIT', 'MEASURE',
     'LABEL', 'HALT', 'JUMP', 'JUMP-WHEN', 'JUMP-UNLESS',
     'RESET', 'WAIT', 'NOP', 'INCLUDE', 'PRAGMA',
@@ -76,11 +78,11 @@ def _format_qubit_str(qubit: QubitOrPlaceholder) -> str:
     return str(qubit)
 
 
-def _format_qubits_str(qubits: List[QubitOrPlaceholder]) -> str:
+def _format_qubits_str(qubits: Iterable[QubitOrPlaceholder]) -> str:
     return " ".join([_format_qubit_str(qubit) for qubit in qubits])
 
 
-def _format_qubits_out(qubits: List[QubitOrPlaceholder]) -> str:
+def _format_qubits_out(qubits: Iterable[QubitOrPlaceholder]) -> str:
     return " ".join([qubit.out() for qubit in qubits])
 
 
@@ -93,26 +95,31 @@ class Gate(AbstractInstruction):
     This is the pyQuil object for a quantum gate instruction.
     """
 
-    def __init__(self, name: str, params: List[ParameterDesignator],
-                 qubits: List[QubitOrPlaceholder]):
+    def __init__(self, name: str, params: Iterable[ParameterDesignator],
+                 qubits: Iterable[QubitOrPlaceholder]):
         if not isinstance(name, string_types):
             raise TypeError("Gate name must be a string")
 
         if name in RESERVED_WORDS:
             raise ValueError("Cannot use {} for a gate name since it's a reserved word".format(name))
 
-        if not isinstance(params, list):
-            raise TypeError("Gate params must be a list")
+        if not isinstance(params, collections.abc.Iterable):
+            raise TypeError("Gate params must be an Iterable")
 
-        if not isinstance(qubits, list) or not qubits:
-            raise TypeError("Gate arguments must be a non-empty list")
+        if not isinstance(qubits, collections.abc.Iterable):
+            raise TypeError("Gate arguments must be an Iterable")
+
         for qubit in qubits:
             if not isinstance(qubit, (Qubit, QubitPlaceholder)):
                 raise TypeError("Gate arguments must all be Qubits")
 
+        qubits_list = list(qubits)
+        if len(qubits_list) == 0:
+            raise TypeError("Gate arguments must be non-empty")
+
         self.name = name
-        self.params = params
-        self.qubits = qubits
+        self.params = list(params)
+        self.qubits = qubits_list
         self.modifiers: List[str] = []
 
     def get_qubits(self, indices: bool = True) -> Set[QubitDesignator]:
@@ -841,14 +848,13 @@ class Pragma(AbstractInstruction):
     """
 
     def __init__(self, command: str,
-                 args: Union[List[Union[QubitDesignator, str]],
-                             Tuple[Union[QubitDesignator, str], ...]] = (),
+                 args: Iterable[Union[QubitDesignator, str]] = (),
                  freeform_string: str = ""):
         if not isinstance(command, string_types):
             raise TypeError("Pragma's require an identifier.")
 
-        if not isinstance(args, (tuple, list)):
-            raise TypeError("Pragma arguments must be a list or tuple: {}".format(args))
+        if not isinstance(args, collections.abc.Iterable):
+            raise TypeError("Pragma arguments must be an Iterable: {}".format(args))
         for a in args:
             if not (isinstance(a, string_types)
                     or isinstance(a, integer_types)
@@ -860,7 +866,7 @@ class Pragma(AbstractInstruction):
                 freeform_string))
 
         self.command = command
-        self.args = args
+        self.args = tuple(args)
         self.freeform_string = freeform_string
 
     def out(self) -> str:
@@ -875,7 +881,7 @@ class Pragma(AbstractInstruction):
         return '<PRAGMA {}>'.format(self.command)
 
 
-DeclareOffsets = List[Tuple[int, str]]
+DeclareOffsets = Iterable[Tuple[int, str]]
 
 
 class Declare(AbstractInstruction):
