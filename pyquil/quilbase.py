@@ -338,7 +338,7 @@ class DefGate(AbstractInstruction):
             """
             Formats a parameterized matrix element.
 
-            :param element: {int, float, complex, str} The parameterized element to format.
+            :param element: The parameterized element to format.
             """
             if isinstance(element, integer_types) or isinstance(element, (float, complex, np.int_)):
                 return format_parameter(element)
