@@ -18,8 +18,9 @@ from typing import Any, Callable, Mapping, Optional, Tuple, Union, overload
 
 from pyquil.quilatom import (Addr, Expression, MemoryReference, MemoryReferenceDesignator,
                              MRefDesignatorOrImmediateInt, MRefDesignatorOrImmediateValue,
-                             MRefOrImmediateValue, Parameter, ParameterDesignator, Qubit,
-                             QubitDesignator, QubitPlaceholder, unpack_classical_reg, unpack_qubit)
+                             MRefOrImmediateInt, MRefOrImmediateValue, Parameter,
+                             ParameterDesignator, Qubit, QubitDesignator, QubitPlaceholder,
+                             unpack_classical_reg, unpack_qubit)
 from pyquil.quilbase import (AbstractInstruction, Gate, Halt, Reset, ResetQubit, Measurement, Nop,
                              Wait,
                              ClassicalNeg, ClassicalNot,
@@ -529,7 +530,7 @@ def MEASURE(qubit: QubitDesignator, classical_reg: Optional[MemoryReferenceDesig
     return Measurement(qubit, address)
 
 
-def TRUE(classical_reg: Union[MemoryReference, int]) -> ClassicalMove:
+def TRUE(classical_reg: MRefOrImmediateInt) -> ClassicalMove:
     """
     Produce a TRUE instruction.
 
@@ -542,7 +543,7 @@ def TRUE(classical_reg: Union[MemoryReference, int]) -> ClassicalMove:
     return MOVE(classical_reg, 1)
 
 
-def FALSE(classical_reg: Union[MemoryReference, int]) -> ClassicalMove:
+def FALSE(classical_reg: MRefOrImmediateInt) -> ClassicalMove:
     """
     Produce a FALSE instruction.
 
